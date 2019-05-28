@@ -1,0 +1,128 @@
+;
+;	Kodmall för Morsekodsuppgift i laboration 4   (20161210/JJ)
+;
+
+Inport	EQU	$FC
+Utport	EQU	$FB
+DelayC1	EQU	$20		;Dessa konstanter styr hur lång fördröjning Delay1s orsakar.
+DelayC2	EQU	$01		;Ändra dem i labbet så att fördröjnigen blir rimligt lång.
+
+	ORG	$FF
+	FCB	$20
+
+	ORG	$20
+init:   LDSP	#$10
+	JMP	Main
+
+Main:	CLR	Utport 		; släck lampan
+	JSR	ReadAscii	; anropa inläsningsrutinen
+
+	SUBA	#$41
+	LSLA
+	PSHA
+	LDX	#MorseCode
+	LDA	A,X
+	STA	Count
+
+	PULA
+	INCA
+	LDA	A,X
+repeat:	JSR 	BlinkLight
+	LSLA
+	DEC	Count
+	TST	Count
+	BHI	repeat
+	
+	
+	
+	BRA	Main
+	
+
+ReadAscii:
+	; phase 1 kollar ifall bit0 är en 1'a. om så är fallet branchar den tillbaka i en whileloop.
+phase1:	LDA	Inport
+	ANDA	#01
+	BNE	phase1
+	; phase 2 kollar släpper först igenom när bit0 säts till en 1'a på nytt (indikerar att vi skickar in en ny kod).
+phase2:	LDA 	Inport
+	ANDA	#01
+	BEQ	phase2
+	LDA	Inport
+	LSRA
+	RTS
+	
+BlinkLight:
+	; -- writes zeros to "utport" then complements (IE all ones). then turns lights on. with a 1sec delay.
+	PSHA	; <-- används inte men labanteckningarna vill att vi gör det \_:) _/
+	CLR	Utport
+	COM	Utport
+	JSR 	Delay1s
+	
+	;-- evaluates the Z. if Z=1 (long signal) then it extends the delay with another 3sec delay. else branch to "short".
+	TSTA
+	BPL	short
+	JSR	Delay1s
+	JSR	Delay1s
+	JSR	Delay1s
+
+	;-- pulls original A value back from the stack.
+short:	PULA
+	CLR	Utport
+	JSR	Delay1s	; Delay 1s with lamps being turned off.
+	RTS
+
+
+
+; Orsakar en fördröjning på ungefär 1s i simulatorn (vid "run fast")
+; Ändrar inga register
+Delay1s:
+	PSHA
+	PSHX
+	PSHC
+	LDX	#DelayC2
+Delay1s_loop2:
+	LDA	#DelayC1
+Delay1s_loop:
+	DECA
+	BNE	Delay1s_loop
+	LEAX	-1,X
+	CMPX	#0
+	BNE	Delay1s_loop2
+	PULC
+	PULX
+	PULA
+	RTS
+
+; Data - Variabler
+Count:
+	RMB	1
+
+; Data - Konstanter
+MorseCode:
+	FCB	2,%01000000 ;'A'
+	FCB	4,%10000000 ;'B'
+	FCB	4,%10100000 ;'C'
+	FCB	3,%10000000 ;'D'
+	FCB	1,%00000000 ;'E'
+	FCB	4,%00100000 ;'F'
+	FCB	3,%11000000 ;'G'
+	FCB	4,%00000000 ;'H'
+	FCB	2,%00000000 ;'I'
+	FCB	4,%01110000 ;'J'
+	FCB	3,%10100000 ;'K'
+	FCB	4,%01000000 ;'L'
+	FCB	2,%11000000 ;'M'
+	FCB	2,%10000000 ;'N'
+	FCB	3,%11100000 ;'O'
+	FCB	4,%01100000 ;'P'
+	FCB	4,%11010000 ;'Q'
+	FCB	3,%01000000 ;'R'
+	FCB	3,%00000000 ;'S'
+	FCB	1,%10000000 ;'T'
+	FCB	3,%00100000 ;'U'
+	FCB	4,%00010000 ;'V'
+	FCB	3,%01100000 ;'W'
+	FCB	4,%10010000 ;'X'
+	FCB	4,%10110000 ;'Y'
+	FCB	4,%11000000 ;'Z'
+	
