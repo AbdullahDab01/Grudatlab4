@@ -1,0 +1,18 @@
+; Label			Direktiv	Operand
+STEGMOTOR:		EQU		$FB
+
+			ORG		$20
+
+State_1:		LDA		#$05
+			STA		STEGMOTOR
+
+State_2:		LDA		#$06
+			STA		STEGMOTOR
+
+State_3:		LDA		#$0A
+			STA		STEGMOTOR
+
+State_4:		LDA		#$09
+			STA		STEGMOTOR
+
+			JMP		State_1
